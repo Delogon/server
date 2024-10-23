@@ -12,15 +12,21 @@ namespace OCA\Files_External\Lib\Storage;
 use GuzzleHttp\Psr7\Uri;
 use Icewind\Streams\CallbackWrapper;
 use Icewind\Streams\IteratorDirectory;
+use OC\Files\Filesystem;
 use OC\Files\ObjectStore\SwiftFactory;
+use OC\Files\Storage\Common;
+use OCP\Cache\CappedMemoryCache;
 use OCP\Files\IMimeTypeDetector;
+use OCP\Files\StorageAuthException;
 use OCP\Files\StorageBadConfigException;
+use OCP\Files\StorageNotAvailableException;
+use OCP\ICache;
 use OpenStack\Common\Error\BadResponseError;
 use OpenStack\ObjectStore\v1\Models\Container;
 use OpenStack\ObjectStore\v1\Models\StorageObject;
 use Psr\Log\LoggerInterface;
 
-class Swift extends \OC\Files\Storage\Common {
+class Swift extends Common {
 	/** @var SwiftFactory */
 	private $connectionFactory;
 	/**
@@ -52,7 +58,7 @@ class Swift extends \OC\Files\Storage\Common {
 	 * \OpenCloud\OpenStack\ObjectStorage\Resource\DataObject for existing
 	 * paths and path to false for not existing paths.
 	 *
-	 * @var \OCP\ICache
+	 * @var ICache
 	 */
 	private $objectCache;
 
@@ -78,8 +84,8 @@ class Swift extends \OC\Files\Storage\Common {
 	 *
 	 * @return StorageObject|false object
 	 *                             or false if the object did not exist
-	 * @throws \OCP\Files\StorageAuthException
-	 * @throws \OCP\Files\StorageNotAvailableException
+	 * @throws StorageAuthException
+	 * @throws StorageNotAvailableException
 	 */
 	private function fetchObject(string $path): StorageObject|false {
 		$cached = $this->objectCache->get($path);
@@ -109,8 +115,8 @@ class Swift extends \OC\Files\Storage\Common {
 	 * Returns whether the given path exists.
 	 *
 	 * @return bool true if the object exist, false otherwise
-	 * @throws \OCP\Files\StorageAuthException
-	 * @throws \OCP\Files\StorageNotAvailableException
+	 * @throws StorageAuthException
+	 * @throws StorageNotAvailableException
 	 */
 	private function doesObjectExist(string $path): bool {
 		return $this->fetchObject($path) !== false;
@@ -155,7 +161,7 @@ class Swift extends \OC\Files\Storage\Common {
 
 		$this->params = $params;
 		// FIXME: private class...
-		$this->objectCache = new \OCP\Cache\CappedMemoryCache();
+		$this->objectCache = new CappedMemoryCache();
 		$this->connectionFactory = new SwiftFactory(
 			\OC::$server->getMemCacheFactory()->createDistributed('swift/'),
 			$this->params,
@@ -216,7 +222,7 @@ class Swift extends \OC\Files\Storage\Common {
 
 		$dh = $this->opendir($path);
 		while (($file = readdir($dh)) !== false) {
-			if (\OC\Files\Filesystem::isIgnoredDir($file)) {
+			if (Filesystem::isIgnoredDir($file)) {
 				continue;
 			}
 
@@ -482,7 +488,7 @@ class Swift extends \OC\Files\Storage\Common {
 
 			$dh = $this->opendir($source);
 			while (($file = readdir($dh)) !== false) {
-				if (\OC\Files\Filesystem::isIgnoredDir($file)) {
+				if (Filesystem::isIgnoredDir($file)) {
 					continue;
 				}
 
@@ -531,8 +537,8 @@ class Swift extends \OC\Files\Storage\Common {
 	 * Returns the initialized object store container.
 	 *
 	 * @return Container
-	 * @throws \OCP\Files\StorageAuthException
-	 * @throws \OCP\Files\StorageNotAvailableException
+	 * @throws StorageAuthException
+	 * @throws StorageNotAvailableException
 	 */
 	public function getContainer(): Container {
 		if (is_null($this->container)) {

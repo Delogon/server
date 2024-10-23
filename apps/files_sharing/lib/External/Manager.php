@@ -16,6 +16,7 @@ use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Federation\ICloudFederationFactory;
 use OCP\Federation\ICloudFederationProviderManager;
 use OCP\Files;
+use OCP\Files\Events\InvalidateMountCacheEvent;
 use OCP\Files\NotFoundException;
 use OCP\Files\Storage\IStorageFactory;
 use OCP\Http\Client\IClientService;
@@ -35,71 +36,27 @@ class Manager {
 	/** @var string|null */
 	private $uid;
 
-	/** @var IDBConnection */
-	private $connection;
-
 	/** @var \OC\Files\Mount\Manager */
 	private $mountManager;
 
-	/** @var IStorageFactory */
-	private $storageLoader;
-
-	/** @var IClientService */
-	private $clientService;
-
-	/** @var IManager */
-	private $notificationManager;
-
-	/** @var IDiscoveryService */
-	private $discoveryService;
-
-	/** @var ICloudFederationProviderManager */
-	private $cloudFederationProviderManager;
-
-	/** @var ICloudFederationFactory */
-	private $cloudFederationFactory;
-
-	/** @var IGroupManager */
-	private $groupManager;
-
-	/** @var IUserManager */
-	private $userManager;
-
-	/** @var IEventDispatcher */
-	private $eventDispatcher;
-
-	/** @var LoggerInterface */
-	private $logger;
-
 	public function __construct(
-		IDBConnection                   $connection,
-		\OC\Files\Mount\Manager         $mountManager,
-		IStorageFactory                 $storageLoader,
-		IClientService                  $clientService,
-		IManager                        $notificationManager,
-		IDiscoveryService               $discoveryService,
-		ICloudFederationProviderManager $cloudFederationProviderManager,
-		ICloudFederationFactory         $cloudFederationFactory,
-		IGroupManager                   $groupManager,
-		IUserManager                    $userManager,
-		IUserSession                    $userSession,
-		IEventDispatcher                $eventDispatcher,
-		LoggerInterface                 $logger,
+		private IDBConnection $connection,
+		\OC\Files\Mount\Manager $mountManager,
+		private IStorageFactory $storageLoader,
+		private IClientService $clientService,
+		private IManager $notificationManager,
+		private IDiscoveryService $discoveryService,
+		private ICloudFederationProviderManager $cloudFederationProviderManager,
+		private ICloudFederationFactory $cloudFederationFactory,
+		private IGroupManager $groupManager,
+		private IUserManager $userManager,
+		IUserSession $userSession,
+		private IEventDispatcher $eventDispatcher,
+		private LoggerInterface $logger,
 	) {
 		$user = $userSession->getUser();
-		$this->connection = $connection;
 		$this->mountManager = $mountManager;
-		$this->storageLoader = $storageLoader;
-		$this->clientService = $clientService;
 		$this->uid = $user ? $user->getUID() : null;
-		$this->notificationManager = $notificationManager;
-		$this->discoveryService = $discoveryService;
-		$this->cloudFederationProviderManager = $cloudFederationProviderManager;
-		$this->cloudFederationFactory = $cloudFederationFactory;
-		$this->groupManager = $groupManager;
-		$this->userManager = $userManager;
-		$this->eventDispatcher = $eventDispatcher;
-		$this->logger = $logger;
 	}
 
 	/**
@@ -347,7 +304,7 @@ class Manager {
 				$this->sendFeedbackToRemote($share['remote'], $share['share_token'], $share['remote_id'], 'accept');
 				$event = new FederatedShareAddedEvent($share['remote']);
 				$this->eventDispatcher->dispatchTyped($event);
-				$this->eventDispatcher->dispatchTyped(new Files\Events\InvalidateMountCacheEvent($this->userManager->get($this->uid)));
+				$this->eventDispatcher->dispatchTyped(new InvalidateMountCacheEvent($this->userManager->get($this->uid)));
 				$result = true;
 			}
 		}
@@ -567,7 +524,7 @@ class Manager {
 		');
 		$result = (bool)$query->execute([$target, $targetHash, $sourceHash, $this->uid]);
 
-		$this->eventDispatcher->dispatchTyped(new Files\Events\InvalidateMountCacheEvent($this->userManager->get($this->uid)));
+		$this->eventDispatcher->dispatchTyped(new InvalidateMountCacheEvent($this->userManager->get($this->uid)));
 
 		return $result;
 	}

@@ -341,6 +341,13 @@ $CONFIG = [
 'davstorage.request_timeout' => 30,
 
 /**
+ * The timeout in seconds for synchronizing address books, e.g. federated system address books (as run by `occ federation:sync-addressbooks`).
+ * 
+ * Defaults to ``30`` seconds
+ */
+'carddav_sync_request_timeout' => 30,
+
+/**
  * `true` enabled a relaxed session timeout, where the session timeout would no longer be
  * handled by Nextcloud but by either the PHP garbage collection or the expiration of
  * potential other session backends like redis.
@@ -2549,4 +2556,22 @@ $CONFIG = [
 	'/bin',
 	'/opt/bin',
 ],
+
+/**
+ * The maximum chunk size to use for chunked uploads.
+ * A bigger chunk size results in higher throughput, but above 100 MiB there are only diminishing returns,
+ * while services like Cloudflare already limit to 100 MiB.
+ *
+ * Defaults to 100 MiB.
+ */
+'files.chunked_upload.max_size' => 100 * 1024 * 1024,
+
+/**
+ * The maximum number of chunks uploaded in parallel during chunked uploads.
+ * A bigger count results in higher throughput, but will also consume more server workers,
+ * while the improvements diminish.
+ *
+ * Defaults to 5.
+ */
+'files.chunked_upload.max_parallel_count' => 5,
 ];

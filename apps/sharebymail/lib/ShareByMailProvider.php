@@ -35,6 +35,7 @@ use OCP\Share\IAttributes;
 use OCP\Share\IManager as IShareManager;
 use OCP\Share\IShare;
 use OCP\Share\IShareProviderWithNotification;
+use OCP\Util;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -382,7 +383,7 @@ class ShareByMailProvider extends DefaultShareProvider implements IShareProvider
 				]
 			);
 		}
-		$message->setFrom([\OCP\Util::getDefaultEmailAddress($instanceName) => $senderName]);
+		$message->setFrom([Util::getDefaultEmailAddress($instanceName) => $senderName]);
 
 		// The "Reply-To" is set to the sharer if an mail address is configured
 		// also the default footer contains a "Do not reply" which needs to be adjusted.
@@ -478,7 +479,7 @@ class ShareByMailProvider extends DefaultShareProvider implements IShareProvider
 				]
 			);
 		}
-		$message->setFrom([\OCP\Util::getDefaultEmailAddress($instanceName) => $senderName]);
+		$message->setFrom([Util::getDefaultEmailAddress($instanceName) => $senderName]);
 
 		// The "Reply-To" is set to the sharer if an mail address is configured
 		// also the default footer contains a "Do not reply" which needs to be adjusted.
@@ -548,7 +549,7 @@ class ShareByMailProvider extends DefaultShareProvider implements IShareProvider
 				]
 			);
 		}
-		$message->setFrom([\OCP\Util::getDefaultEmailAddress($instanceName) => $senderName]);
+		$message->setFrom([Util::getDefaultEmailAddress($instanceName) => $senderName]);
 		if ($this->settingsManager->replyToInitiator() && $initiatorEmailAddress !== null) {
 			$message->setReplyTo([$initiatorEmailAddress => $initiatorDisplayName]);
 			$emailTemplate->addFooter($instanceName . ' - ' . $this->defaults->getSlogan());
@@ -617,7 +618,7 @@ class ShareByMailProvider extends DefaultShareProvider implements IShareProvider
 				$instanceName
 			]
 		);
-		$message->setFrom([\OCP\Util::getDefaultEmailAddress($instanceName) => $senderName]);
+		$message->setFrom([Util::getDefaultEmailAddress($instanceName) => $senderName]);
 		$message->setTo([$initiatorEMailAddress => $initiatorDisplayName]);
 		$message->useTemplate($emailTemplate);
 		$this->mailer->send($message);
@@ -698,7 +699,7 @@ class ShareByMailProvider extends DefaultShareProvider implements IShareProvider
 			->setValue('permissions', $qb->createNamedParameter($permissions))
 			->setValue('token', $qb->createNamedParameter($token))
 			->setValue('password', $qb->createNamedParameter($password))
-			->setValue('password_expiration_time', $qb->createNamedParameter($passwordExpirationTime, IQueryBuilder::PARAM_DATE))
+			->setValue('password_expiration_time', $qb->createNamedParameter($passwordExpirationTime, IQueryBuilder::PARAM_DATETIME_MUTABLE))
 			->setValue('password_by_talk', $qb->createNamedParameter($sendPasswordByTalk, IQueryBuilder::PARAM_BOOL))
 			->setValue('stime', $qb->createNamedParameter(time()))
 			->setValue('hide_download', $qb->createNamedParameter((int)$hideDownload, IQueryBuilder::PARAM_INT))
@@ -711,7 +712,7 @@ class ShareByMailProvider extends DefaultShareProvider implements IShareProvider
 
 		$qb->setValue('attributes', $qb->createNamedParameter($shareAttributes));
 		if ($expirationTime !== null) {
-			$qb->setValue('expiration', $qb->createNamedParameter($expirationTime, IQueryBuilder::PARAM_DATE));
+			$qb->setValue('expiration', $qb->createNamedParameter($expirationTime, IQueryBuilder::PARAM_DATETIME_MUTABLE));
 		}
 
 		$qb->executeStatement();
@@ -751,10 +752,10 @@ class ShareByMailProvider extends DefaultShareProvider implements IShareProvider
 			->set('uid_owner', $qb->createNamedParameter($share->getShareOwner()))
 			->set('uid_initiator', $qb->createNamedParameter($share->getSharedBy()))
 			->set('password', $qb->createNamedParameter($share->getPassword()))
-			->set('password_expiration_time', $qb->createNamedParameter($share->getPasswordExpirationTime(), IQueryBuilder::PARAM_DATE))
+			->set('password_expiration_time', $qb->createNamedParameter($share->getPasswordExpirationTime(), IQueryBuilder::PARAM_DATETIME_MUTABLE))
 			->set('label', $qb->createNamedParameter($share->getLabel()))
 			->set('password_by_talk', $qb->createNamedParameter($share->getSendPasswordByTalk(), IQueryBuilder::PARAM_BOOL))
-			->set('expiration', $qb->createNamedParameter($share->getExpirationDate(), IQueryBuilder::PARAM_DATE))
+			->set('expiration', $qb->createNamedParameter($share->getExpirationDate(), IQueryBuilder::PARAM_DATETIME_MUTABLE))
 			->set('note', $qb->createNamedParameter($share->getNote()))
 			->set('hide_download', $qb->createNamedParameter((int)$share->getHideDownload(), IQueryBuilder::PARAM_INT))
 			->set('attributes', $qb->createNamedParameter($shareAttributes))
@@ -1203,7 +1204,7 @@ class ShareByMailProvider extends DefaultShareProvider implements IShareProvider
 			->from('share')
 			->where(
 				$qb->expr()->orX(
-					$qb->expr()->eq('share_type', $qb->createNamedParameter(\OCP\Share\IShare::TYPE_EMAIL))
+					$qb->expr()->eq('share_type', $qb->createNamedParameter(IShare::TYPE_EMAIL))
 				)
 			);
 

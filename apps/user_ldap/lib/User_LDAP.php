@@ -23,27 +23,18 @@ use OCP\UserInterface;
 use Psr\Log\LoggerInterface;
 
 class User_LDAP extends BackendUtility implements IUserBackend, UserInterface, IUserLDAP, ICountUsersBackend, ICountMappedUsersBackend, IProvideEnabledStateBackend {
-	protected INotificationManager $notificationManager;
-	protected UserPluginManager $userPluginManager;
-	protected LoggerInterface $logger;
-	protected DeletedUsersIndex $deletedUsersIndex;
-
 	public function __construct(
 		Access $access,
-		INotificationManager $notificationManager,
-		UserPluginManager $userPluginManager,
-		LoggerInterface $logger,
-		DeletedUsersIndex $deletedUsersIndex,
+		protected INotificationManager $notificationManager,
+		protected UserPluginManager $userPluginManager,
+		protected LoggerInterface $logger,
+		protected DeletedUsersIndex $deletedUsersIndex,
 	) {
 		parent::__construct($access);
-		$this->notificationManager = $notificationManager;
-		$this->userPluginManager = $userPluginManager;
-		$this->logger = $logger;
-		$this->deletedUsersIndex = $deletedUsersIndex;
 	}
 
 	/**
-	 * checks whether the user is allowed to change his avatar in Nextcloud
+	 * checks whether the user is allowed to change their avatar in Nextcloud
 	 *
 	 * @param string $uid the Nextcloud user name
 	 * @return boolean either the user can or cannot
@@ -258,8 +249,8 @@ class User_LDAP extends BackendUtility implements IUserBackend, UserInterface, I
 	/**
 	 * checks whether a user is still available on LDAP
 	 *
-	 * @param string|\OCA\User_LDAP\User\User $user either the Nextcloud user
-	 *                                              name or an instance of that user
+	 * @param string|User $user either the Nextcloud user
+	 *                          name or an instance of that user
 	 * @throws \Exception
 	 * @throws \OC\ServerNotAvailableException
 	 */

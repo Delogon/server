@@ -10,6 +10,8 @@ namespace OCA\Files\Tests\Service;
 use OCA\Files\Service\TagService;
 use OCP\Activity\IManager;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Files\Folder;
+use OCP\Files\NotFoundException;
 use OCP\ITags;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -35,7 +37,7 @@ class TagServiceTest extends \Test\TestCase {
 	private $activityManager;
 
 	/**
-	 * @var \OCP\Files\Folder
+	 * @var Folder
 	 */
 	private $root;
 
@@ -43,12 +45,12 @@ class TagServiceTest extends \Test\TestCase {
 	private $dispatcher;
 
 	/**
-	 * @var \OCA\Files\Service\TagService|\PHPUnit\Framework\MockObject\MockObject
+	 * @var TagService|\PHPUnit\Framework\MockObject\MockObject
 	 */
 	private $tagService;
 
 	/**
-	 * @var \OCP\ITags
+	 * @var ITags
 	 */
 	private $tagger;
 
@@ -61,7 +63,7 @@ class TagServiceTest extends \Test\TestCase {
 		\OC_Util::setupFS($this->user);
 		$user = $this->createMock(IUser::class);
 		/**
-		 * @var \OCP\IUserSession
+		 * @var IUserSession
 		 */
 		$this->userSession = $this->createMock(IUserSession::class);
 		$this->userSession->expects($this->any())
@@ -134,7 +136,7 @@ class TagServiceTest extends \Test\TestCase {
 		$caught = false;
 		try {
 			$this->tagService->updateFileTags('subdir/unexist.txt', [$tag1]);
-		} catch (\OCP\Files\NotFoundException $e) {
+		} catch (NotFoundException $e) {
 			$caught = true;
 		}
 		$this->assertTrue($caught);

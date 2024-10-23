@@ -10,7 +10,9 @@ namespace OCA\DAV\CardDAV;
 
 use OCP\AppFramework\Db\TTransactional;
 use OCP\AppFramework\Http;
+use OCP\Http\Client\IClient;
 use OCP\Http\Client\IClientService;
+use OCP\IConfig;
 use OCP\IDBConnection;
 use OCP\IUser;
 use OCP\IUserManager;
@@ -24,29 +26,19 @@ use function is_null;
 class SyncService {
 
 	use TTransactional;
-
-	private CardDavBackend $backend;
-	private IUserManager $userManager;
-	private IDBConnection $dbConnection;
-	private LoggerInterface $logger;
 	private ?array $localSystemAddressBook = null;
-	private Converter $converter;
 	protected string $certPath;
-	private IClientService $clientService;
 
-	public function __construct(CardDavBackend $backend,
-		IUserManager $userManager,
-		IDBConnection $dbConnection,
-		LoggerInterface $logger,
-		Converter $converter,
-		IClientService $clientService) {
-		$this->backend = $backend;
-		$this->userManager = $userManager;
-		$this->logger = $logger;
-		$this->converter = $converter;
+	public function __construct(
+		private CardDavBackend $backend,
+		private IUserManager $userManager,
+		private IDBConnection $dbConnection,
+		private LoggerInterface $logger,
+		private Converter $converter,
+		private IClientService $clientService,
+		private IConfig $config,
+	) {
 		$this->certPath = '';
-		$this->dbConnection = $dbConnection;
-		$this->clientService = $clientService;
 	}
 
 	/**
@@ -150,7 +142,8 @@ class SyncService {
 		$options = [
 			'auth' => [$userName, $sharedSecret],
 			'body' => $this->buildSyncCollectionRequestBody($syncToken),
-			'headers' => ['Content-Type' => 'application/xml']
+			'headers' => ['Content-Type' => 'application/xml'],
+			'timeout' => $this->config->getSystemValueInt('carddav_sync_request_timeout', IClient::DEFAULT_REQUEST_TIMEOUT)
 		];
 
 		$response = $client->request(

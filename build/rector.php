@@ -7,9 +7,46 @@ declare(strict_types=1);
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
+use PhpParser\Node;
+use Rector\CodingStyle\Contract\ClassNameImport\ClassNameImportSkipVoterInterface;
 use Rector\Config\RectorConfig;
+use Rector\Php80\Rector\Class_\ClassPropertyAssignToConstructorPromotionRector;
+use Rector\StaticTypeMapper\ValueObject\Type\FullyQualifiedObjectType;
+use Rector\ValueObject\Application\File;
 
 $nextcloudDir = dirname(__DIR__);
+
+class NextcloudNamespaceSkipVoter implements ClassNameImportSkipVoterInterface {
+	private array $namespacePrefixes = [
+		'OC',
+		'OCA',
+		'OCP',
+	];
+	private array $skippedClassNames = [
+		'Backend',
+		'Connection',
+		'Exception',
+		'IManager',
+		'IProvider',
+		'Manager',
+		'Plugin',
+		'Provider',
+	];
+	public function shouldSkip(File $file, FullyQualifiedObjectType $fullyQualifiedObjectType, Node $node) : bool {
+		if (in_array($fullyQualifiedObjectType->getShortName(), $this->skippedClassNames)) {
+			// Skip common class names to avoid confusion
+			return true;
+		}
+		foreach ($this->namespacePrefixes as $prefix) {
+			if (str_starts_with($fullyQualifiedObjectType->getClassName(), $prefix . '\\')) {
+				// Import Nextcloud namespaces
+				return false;
+			}
+		}
+		// Skip everything else
+		return true;
+	}
+}
 
 $config = RectorConfig::configure()
 	->withPaths([
@@ -30,9 +67,16 @@ $config = RectorConfig::configure()
 	])
 	// uncomment to reach your current PHP version
 	// ->withPhpSets()
-	->withTypeCoverageLevel(0);
+	->withImportNames(importShortClasses:false)
+	->withTypeCoverageLevel(0)
+	->withConfiguredRule(ClassPropertyAssignToConstructorPromotionRector::class, [
+		'inline_public' => true,
+		'rename_property' => true,
+	]);
 
+$config->registerService(NextcloudNamespaceSkipVoter::class, tag:ClassNameImportSkipVoterInterface::class);
 
+/* Ignore all files ignored by git */
 $ignoredEntries = shell_exec('git status --porcelain --ignored ' . escapeshellarg($nextcloudDir));
 $ignoredEntries = explode("\n", $ignoredEntries);
 $ignoredEntries = array_filter($ignoredEntries, static fn (string $line) => str_starts_with($line, '!! '));

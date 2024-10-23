@@ -291,7 +291,7 @@ class ConvertType extends Command implements CompletionAwareInterface {
 		$query->automaticTablePrefix(false);
 		$query->select($query->func()->count('*', 'num_entries'))
 			->from($table->getName());
-		$result = $query->execute();
+		$result = $query->executeQuery();
 		$count = $result->fetchOne();
 		$result->closeCursor();
 
@@ -330,7 +330,7 @@ class ConvertType extends Command implements CompletionAwareInterface {
 		for ($chunk = 0; $chunk < $numChunks; $chunk++) {
 			$query->setFirstResult($chunk * $chunkSize);
 
-			$result = $query->execute();
+			$result = $query->executeQuery();
 
 			try {
 				$toDB->beginTransaction();

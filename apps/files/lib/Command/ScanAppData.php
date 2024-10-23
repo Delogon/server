@@ -9,8 +9,10 @@ use OC\Core\Command\Base;
 use OC\Core\Command\InterruptedException;
 use OC\DB\Connection;
 use OC\DB\ConnectionAdapter;
+use OC\Files\Utils\Scanner;
 use OC\ForbiddenException;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\Files\Node;
 use OCP\Files\NotFoundException;
@@ -48,7 +50,7 @@ class ScanAppData extends Base {
 
 	protected function scanFiles(OutputInterface $output, string $folder): int {
 		try {
-			/** @var \OCP\Files\Folder $appData */
+			/** @var Folder $appData */
 			$appData = $this->getAppDataFolder();
 		} catch (NotFoundException $e) {
 			$output->writeln('<error>NoAppData folder found</error>');
@@ -65,7 +67,7 @@ class ScanAppData extends Base {
 		}
 
 		$connection = $this->reconnectToDatabase($output);
-		$scanner = new \OC\Files\Utils\Scanner(
+		$scanner = new Scanner(
 			null,
 			new ConnectionAdapter($connection),
 			\OC::$server->query(IEventDispatcher::class),
